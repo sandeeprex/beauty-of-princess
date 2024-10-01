@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messaging App with Dynamic UID & Search</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f1f1f1;
+    }
+
+    /* Container Layout */
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar for contact list */
+    .sidebar {
+      width: 25%;
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      overflow-y: auto;
+      padding: 20px;
+      position: relative;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* Contact Search Box */
+    .search-box {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .search-box input {
+      width: 90%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    /* Contact List Styles */
+    .contact-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .contact-item {
+      padding: 10px;
+      border-bottom: 1px solid #34495e;
+      cursor: pointer;
+    }
+
+    .contact-item:hover {
+      background-color: #34495e;
+    }
+
+    /* Chat window */
+    .chat-window {
+      width: 75%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: #ecf0f1;
+      padding: 20px;
+    }
+
+    /* User Info Display */
+    .user-info {
+      display: none;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    .user-info h3 {
+      margin-bottom: 10px;
+    }
+
+    .user-info p {
+      margin: 5px 0;
+    }
+
+    /* Profile and Search Icons */
+    .profile-icon, .search-icon {
+      font-size: 24px;
+      cursor: pointer;
+      margin: 0 10px;
+      vertical-align: middle;
+    }
+
+    .search-icon {
+      margin-right: 20px; /* Increased space between the search icon and the search box */
+    }
+
+    /* Message History */
+    .message-history {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-bottom: 10px;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #3498db;
+      color: white;
+      border-radius: 10px;
+      max-width: 60%;
+    }
+
+    .message.received {
+      background-color: #2ecc71;
+      align-self: flex-start;
+    }
+
+    .message.sent {
+      background-color: #3498db;
+      align-self: flex-end;
+    }
+
+    /* Message input */
+    .message-input {
+      display: flex;
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    .message-input input[type="text"] {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      margin-right: 10px;
+    }
+
+    .message-input button {
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .message-input button:hover {
+      background-color: #2980b9;
+    }
+
+    /* Status bar */
+    .status-bar {
+      font-size: 12px;
+      text-align: right;
+      padding-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen" style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <div>
+      <h2>Login to Messaging App</h2>
+      <form id="login-form">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username" placeholder="Enter your username" required><br><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required><br><br>
+        <button type="submit">Login</button>
+      </form>
+      <p id="login-error" style="color: red; display: none;">Invalid username or password</p>
+    </div>
+  </div>
+
+  <!-- Main Messaging App Screen -->
+  <div id="app-container" class="app-container" style="display: none;">
+    
+    <!-- Contact List Sidebar -->
+    <div class="sidebar">
+      <h2>Contacts</h2>
+      <!-- Profile and Search Icons -->
+      <div>
+        <span class="profile-icon" onclick="toggleUserInfo()">👤</span>
+        <span class="search-icon" onclick="toggleSearchBox()">🔍</span>
+      </div>
+      <!-- Contact Search Box -->
+      <div class="search-box" id="search-box">
+        <input type="text" id="contact-search" placeholder="Search by username or UID" oninput="searchContact()">
+      </div>
+      <ul class="contact-list" id="contact-list">
+        <!-- Contacts will be dynamically added here -->
+      </ul>
+    </div>
+
+    <!-- Chat Window -->
+    <div class="chat-window">
+      <!-- User Information Display -->
+      <div class="user-info" id="user-info">
+        <!-- User details will be displayed here after login -->
+      </div>
+
+      <!-- Message History -->
+      <div class="message-history" id="message-history">
+        <!-- Messages will be dynamically added here -->
+      </div>
+
+      <!-- Status (e.g., typing, message delivered, etc.) -->
+      <div class="status-bar" id="status-bar">
+        Typing...
+      </div>
+
+      <!-- Message Input -->
+      <div class="message-input">
+        <input type="text" id="message-input" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Utility function to generate a random 10-digit UID
+    function generateUID() {
+      return Math.floor(1000000000 + Math.random() * 9000000000); // Random 10-digit number
+    }
+
+    // Store users in localStorage
+    function storeUser(username, password) {
+      const uid = generateUID();  // Generate UID
+      const userDetails = { username, password, uid };
+      localStorage.setItem(username, JSON.stringify(userDetails));
+      return userDetails;
+    }
+
+    // Login or Register the user
+    function handleLogin(username, password) {
+      const storedUser = localStorage.getItem(username);
+
+      if (storedUser) {
+        const userDetails = JSON.parse(storedUser);
+        if (userDetails.password === password) {
+          return userDetails;  // Return userDetails if login is successful
+        } else {
+          return null; // Invalid password
+        }
+      } else {
+        // Register a new user
+        return storeUser(username, password);
+      }
+    }
+
+    // Display user info on the page after login
+    function displayUserInfo(userDetails) {
+      const userInfoDiv = document.getElementById('user-info');
+      userInfoDiv.innerHTML = `
+        <h3>User Information</h3>
+        <p><strong>Username:</strong> ${userDetails.username}</p>
+        <p><strong>UID:</strong> ${userDetails.uid}</p>
+        <p><strong>Password:</strong> ${userDetails.password}</p>
+      `;
+    }
+
+    // Toggle user info display
+    function toggleUserInfo() {
+      const userInfoDiv = document.getElementById('user-info');
+      userInfoDiv.style.display = userInfoDiv.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Toggle search box visibility
+    function toggleSearchBox() {
+      const searchBoxDiv = document.getElementById('search-box');
+      searchBoxDiv.style.display = searchBoxDiv.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Login Functionality
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      const userDetails = handleLogin(username, password);
+
+      if (userDetails) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'flex';
+        displayUserInfo(userDetails); // Display user info after login
+      } else {
+        document.getElementById('login-error').style.display = 'block'; // Show error message
+      }
+    });
+
+    // Real-time contact search by username or UID
+    function searchContact() {
+      const searchQuery = document.getElementById('contact-search').value.toLowerCase();
+      const contactList = document.getElementById('contact-list');
+      contactList.innerHTML = ''; // Clear previous search results
+
+      // Iterate through all stored users and display matching contacts
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const user = JSON.parse(localStorage.getItem(key));
+
+        // Check if the search query matches either username or UID
+        if (user.username.toLowerCase().includes(searchQuery) || user.uid.toString().includes(searchQuery)) {
+          const contactItem = document.createElement('li');
+          contactItem.className = 'contact-item';
+          contactItem.innerText = `${user.username} (UID: ${user.uid})`;
+          contactItem.onclick = () => openChat(user.username);
+          contactList.appendChild(contactItem);
+        }
+      }
+    }
+
+    // Open a chat (mock function for now)
+    function openChat(username) {
+      const messageHistory = document.getElementById('message-history');
+      messageHistory.innerHTML = `<p>Chat with ${username}</p>`;
+    }
+
+    // Send a message (mock function for now)
+    function sendMessage() {
+      const messageInput = document.getElementById('message-input');
+      const messageText = messageInput.value.trim();
+
+      if (messageText !== '') {
+        const messageHistory = document.getElementById('message-history');
+
+        // Create a new message element
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'sent');
+        messageElement.innerText = messageText;
+
+        // Append the message to the history
+        messageHistory.appendChild(messageElement);
+
+        // Clear the input
+        messageInput.value = '';
+
+        // Simulate message delivery status
+        setTimeout(function() {
+          document.getElementById('status-bar').innerText = 'Message delivered';
+        }, 1000);
+
+        // Scroll to the latest message
+        messageHistory.scrollTop = messageHistory.scrollHeight;
+      }
+    }
+  </script>
+
+</body>
+</html>
